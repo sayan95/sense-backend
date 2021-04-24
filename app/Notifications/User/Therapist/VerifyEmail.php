@@ -12,15 +12,16 @@ use Illuminate\Notifications\Messages\MailMessage;
 class VerifyEmail extends Notification implements ShouldQueue
 {
     use Queueable;
-
+    public $token;
     /**
      * Create a new notification instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct($token)
     {
         $this->connection = 'database';
+        $this->token = $token;
     }
 
     /**
@@ -51,7 +52,7 @@ class VerifyEmail extends Notification implements ShouldQueue
 
         return (new MailMessage)->view(
             'notifications.user.therapist.verifyemail',
-            ['user' => $notifiable, 'url' => str_replace(url('/api'), $appUrl, $url)]
+            ['user' => $notifiable, 'token' => $this->token]
         );
                     
     }

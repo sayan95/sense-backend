@@ -9,6 +9,6 @@
 <body>
     <p>Hi {{ $user->username }},</p>
     <p>Please click the below link to activate your account</p>
-    <p>{{ $url }}</p>
+    <p>Token - {{ $token }}</p>
 </body>
 </html>

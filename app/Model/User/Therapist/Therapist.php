@@ -44,7 +44,7 @@ class Therapist extends Eloquent implements JWTSubject, Authenticatable
     }
 
     // sends verification link
-    public function sendEmailVerificationMail(){
-        $this->notify(new VerifyEmail);
+    public function sendEmailVerificationMail($token){
+        $this->notify(new VerifyEmail($token));
     }
 }

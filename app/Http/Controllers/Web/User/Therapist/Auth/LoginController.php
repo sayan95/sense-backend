@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web\User\Therapist\Auth;
 
+use App\Events\User\Therapist\SendOtpForTherapistEvent;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -22,7 +23,6 @@ class LoginController extends Controller
     // validate login credentials
     protected function validateLogin(Request $request)
     {
-        
         $request->validate([
             'email' => 'required|string|email|max:50',
             'password' => 'required|string',
@@ -38,6 +38,7 @@ class LoginController extends Controller
         }else{
             $token = $this->guard()->claims(['csrf_token' => Str::random(32)])->attempt($credentials);
         } 
+        
         if(!$token){
             return false;
         }
@@ -52,6 +53,28 @@ class LoginController extends Controller
     protected function sendLoginResponse(Request $request)
     {
         $this->clearLoginAttempts($request);
+
+        // check user has verified email
+        $has_verified_email = $this->guard()->user()->profile_created;
+        
+        // email is not verified
+        if(!$has_verified_email){
+            // get the auth user
+            $therapist = $this->therapistService->findTherapistById($this->guard()->id());
+            
+            $token = rand(100000, 999999);                                  // generate a 6 digit token
+            $otpCookie = cookie('OTP_COOKIE', $token, 60);     // set the token in a cookie
+            $therapist->sendEmailVerificationMail($token);                       // send the email for otp 
+            
+            // logout user
+            $this->guard()->logout();
+
+            // return response
+            return response()->json([
+                'alertType' => 'account-not-verified',
+                'message' => 'Your account is not verified yet.Enter the OTP sent to tour email to verify your account.'
+            ], 422)->withCookie($otpCookie);
+        }
 
         //get the token
         $token = (string)$this->guard()->getToken();

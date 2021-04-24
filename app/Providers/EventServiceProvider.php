@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Events\User\Therapist\SendOtpForTherapistEvent;
 use App\Events\User\Therapist\TherapistRegisterdEvent;
+use App\Listeners\User\Therapist\ProcessOtpListener;
 use App\Listeners\User\Therapist\TherapistAccountActivationListener;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;

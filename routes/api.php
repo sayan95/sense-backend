@@ -53,8 +53,8 @@ Route::group([
 ], function(){
     Route::post('/login', 'Auth\LoginController@login')->name('therapist.login');
     Route::post('/register', 'Auth\RegisterController@register')->name('therapist.register');
-    Route::get('/auth/verify/email', 'Auth\EmailVerificationController@verify')->name('therapist.verify.email');
-    Route::get('/resend/verify/email', 'Auth\EmailVerificationController@resendLink')->name('therapist.verify.email.resend');
+    Route::post('/auth/verify/{email}', 'Auth\EmailVerificationController@verify')->name('therapist.verify.email');
+    Route::get('/resend/verify', 'Auth\EmailVerificationController@resendLink')->name('therapist.verify.email.resend');
 });  // guest routes
 
 Route::group([

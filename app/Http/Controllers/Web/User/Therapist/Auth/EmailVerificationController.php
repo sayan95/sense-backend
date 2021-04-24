@@ -21,24 +21,28 @@ class EmailVerificationController extends Controller
     }
 
     // verifying account activation request
-    public function verify(Request $request)
+    public function verify(Request $request, $email)
     {
+        // get the entered otp
+        $otp_from_client = $request->otp;
+        $otp_from_cookie = $request->cookie('OTP_COOKIE');
+
+        // send invalid response if otp is not matched
+        if($otp_from_client !== $otp_from_cookie){
+            return response()->json([
+                'alertType' => 'otp-mismatch',
+                'message' => 'Invalid OTP entered'
+            ], 422);
+        }
+
         // find the therapist
-        $user = $this->therapistService->findTherapistById($request->user_id);
+        $user = $this->therapistService->findTherapistBySpecificField('email', $email);
 
         // if the user id is invalid
         if ($user == null) {
             return response()->json([
                 'alertType' => 'verification-link-error',
                 'message' => "Invalid verification link"
-            ], 422);
-        }
-
-        // check if the url has the valid signature
-        if (!URL::hasValidSignature($request)) {
-            return response()->json([
-                'alertType' => 'verification-link-error',
-                'message' => "Invalid verification link "
             ], 422);
         }
 
@@ -62,6 +66,9 @@ class EmailVerificationController extends Controller
             $jwtCookie = cookie('jwt', $token, 60);
             $csrfCookie = cookie('csrf', $this->guard()->payload()->get('csrf-token'), 60);
 
+            // remove otp cookie
+            $otpCookie = cookie()->forget('OTP_COOKIE');
+
             //extract the token's expiary date
             $expiration = $this->guard()->getPayload()->get('exp');
 
@@ -70,7 +77,7 @@ class EmailVerificationController extends Controller
                 'alertType' => 'success',
                 'message' => 'Your account is verified successfully',
                 'user' => $user->email
-            ], 200)->withCookie($jwtCookie)->withCookie($csrfCookie);
+            ], 200)->withCookie($jwtCookie)->withCookie($csrfCookie)->withCookie($otpCookie);
         }
         catch(Throwable $exception){
             return response()->json([
@@ -83,13 +90,9 @@ class EmailVerificationController extends Controller
     // resend verification link
     public function resendLink(Request $request)
     {
-        // validate the email 
-        $request->validate([
-            'email' => ['email', 'required', 'max:50', 'string']
-        ]);
-
         // if user not found
         $user = $this->therapistService->findTherapistBySpecificField('email', $request->email);
+        
         if (!$user) {
             return response()->json([
                 'alertType' => 'therapist-not-found-error',
@@ -107,10 +110,18 @@ class EmailVerificationController extends Controller
 
         // send verification email
         try {
-            $user->sendEmailVerificationMail();
+            
+            $token = rand(100000, 999999);    // generate a 6 digit token
+            $otpCookie = cookie('OTP_COOKIE', $token, 60);  // set the token in a cookie
+            $user->sendEmailVerificationMail($token);       // send notification with new token
+            return response()->json([           
+                'alertType' => 'otp-resend',
+                'message' => 'A new OTP has been sent successfully'
+            ], 200)->withCookie($otpCookie);
+
         } catch (Throwable $th) {
             return response()->json([
-                'alertType' => 'error',
+                'alertType' => 'internal-server-error',
                 'message' => 'Something went wrong ! please try again'
             ], 422);
         }
