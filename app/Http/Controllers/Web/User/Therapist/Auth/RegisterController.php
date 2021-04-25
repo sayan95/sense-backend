@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Services\Interfaces\ITherapistService;
+use Illuminate\Support\Facades\Crypt;
 
 class RegisterController extends Controller
 {
@@ -35,7 +36,10 @@ class RegisterController extends Controller
         $token = rand(100000, 999999);
         
         // set the token in a cookie
-        $otpCookie = cookie('OTP_COOKIE', $token, 60);
+        $otpCookie = cookie('OTP_COOKIE', Crypt::encrypt($token), 60);
+
+        // set the new user to the cookie
+        $attempterCookie = cookie('attempter', Crypt::encrypt($newUser->email), 60);
         
         // sending email verification link
         $newUser->sendEmailVerificationMail($token);
@@ -44,7 +48,8 @@ class RegisterController extends Controller
         return response()->json([
             'alertType' => 'success',
             'message' => 'An OTP has been sent to your email. Please check your email'
-        ], 200)->withCookie($otpCookie); // attch cookie with the response
+        ], 200)->withCookie($otpCookie)
+            ->withCookie($attempterCookie); // attch cookie with the response
     }   
 
     // request validator

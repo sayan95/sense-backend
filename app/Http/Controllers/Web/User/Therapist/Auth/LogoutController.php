@@ -16,11 +16,10 @@ class LogoutController extends Controller
     public function logout(Request $request){
         $this->guard()->logout(true);
         $jwtCookie = cookie()->forget('jwt');
-        $csrfCookie = cookie()->forget('csrf');
         return response()->json([
             'alertType' => 'user-logout',
             'message'=> 'You are logged out successfully'
-        ], 200)->withCookie($jwtCookie)->withCookie($csrfCookie);
+        ], 200)->withCookie($jwtCookie);
     }
 
     private function guard(){

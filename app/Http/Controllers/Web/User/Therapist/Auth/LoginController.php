@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Web\User\Therapist\Auth;
 
-use App\Events\User\Therapist\SendOtpForTherapistEvent;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\Therapist\TherapistResource;
+use Illuminate\Support\Facades\Crypt;
 use App\Services\Interfaces\ITherapistService;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use App\Http\Resources\Therapist\TherapistResource;
+use App\Events\User\Therapist\SendOtpForTherapistEvent;
 
 class LoginController extends Controller
 {
@@ -34,9 +35,9 @@ class LoginController extends Controller
         // login credentials
         $credentials = $request->only('email', 'password');
         if($request->has('remember_me') && $request->remember_me === true){
-            $token = $this->guard()->claims(['csrf_token' => Str::random(32)])->setTTL(20160)->attempt($credentials);
+            $token = $this->guard()->setTTL(20160)->attempt($credentials);
         }else{
-            $token = $this->guard()->claims(['csrf_token' => Str::random(32)])->attempt($credentials);
+            $token = $this->guard()->attempt($credentials);
         } 
         
         if(!$token){
@@ -55,7 +56,7 @@ class LoginController extends Controller
         $this->clearLoginAttempts($request);
 
         // check user has verified email
-        $has_verified_email = $this->guard()->user()->profile_created;
+        $has_verified_email = $this->guard()->user()->is_active;
         
         // email is not verified
         if(!$has_verified_email){
@@ -63,17 +64,28 @@ class LoginController extends Controller
             $therapist = $this->therapistService->findTherapistById($this->guard()->id());
             
             $token = rand(100000, 999999);                                  // generate a 6 digit token
-            $otpCookie = cookie('OTP_COOKIE', $token, 60);     // set the token in a cookie
-            $therapist->sendEmailVerificationMail($token);                       // send the email for otp 
+            
+            if($request->cookie('OTP_COOKIE')){                             // Delete any xisting cookie
+                cookie()->forget('OTP_COOKIE');
+            }
+            if($request->cookie('attempter')){
+                cookie()->forget('attempter');
+            }
+
+            $otpCookie = cookie('OTP_COOKIE', Crypt::encrypt($token), 60);     // set the token in a cookie
+            $attemptedUserCookie = cookie('attempter', Crypt::encrypt($therapist->email), 60);
+
+            $therapist->sendEmailVerificationMail($token);                    // send the email for otp 
             
             // logout user
             $this->guard()->logout();
+            $jwtCookie = cookie()->forget('jwt');
 
             // return response
             return response()->json([
                 'alertType' => 'account-not-verified',
-                'message' => 'Your account is not verified yet.Enter the OTP sent to tour email to verify your account.'
-            ], 422)->withCookie($otpCookie);
+                'message' => 'Your account is not verified yet.Enter the OTP sent to tour email to verify your account.',
+            ], 422)->withCookie($otpCookie)->withCookie($jwtCookie)->withCookie($attemptedUserCookie);
         }
 
         //get the token
@@ -81,7 +93,6 @@ class LoginController extends Controller
 
         // set to httponly cookie
         $jwtCookie = cookie('jwt', $token, 60);
-        $csrfCookie = cookie('csrf', $this->guard()->payload()->get('csrf-token'), 60);
 
         //extract the token's expiary date
         $expiration = $this->guard()->getPayload()->get('exp');
@@ -94,7 +105,7 @@ class LoginController extends Controller
             'token_type' => 'bearer',
             'expires_in' => $expiration,
             'user' => new TherapistResource($this->guard()->user())
-        ], 200)->withCookie($jwtCookie)->withCookie($csrfCookie);
+        ], 200)->withCookie($jwtCookie);
     }
 
     // sends login failed reponse
