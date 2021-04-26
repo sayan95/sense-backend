@@ -3,15 +3,12 @@
 namespace App\Http\Controllers\Web\User\Therapist\Auth;
 
 use Throwable;
-use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\URL;
 use App\Http\Controllers\Controller;
-use App\Model\User\Therapist\Therapist;
 use App\Services\Interfaces\ITherapistService;
 use App\Events\User\Therapist\TherapistRegisterdEvent;
 use App\Http\Resources\Therapist\TherapistResource;
-use Illuminate\Support\Facades\Cookie;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Crypt;
 
 class EmailVerificationController extends Controller
@@ -28,9 +25,9 @@ class EmailVerificationController extends Controller
         
         $otp_from_client = $request->otp;                      // get the entered otp
         $otp_from_cookie = $request->Cookie('OTP_COOKIE')      // get the otp from cookie
-                            ?Crypt::decrypt($request->cookie('OTP_COOKIE')) 
+                            ?(string)Crypt::decrypt($request->cookie('OTP_COOKIE')) 
                             : '';
-                            
+
         //  get the attempted user
         if($request->cookie('attempter')){
             cookie()->forget('attempter');
@@ -40,9 +37,9 @@ class EmailVerificationController extends Controller
         // return response for invalid attemter
         if(!$user_from_cookie){
             return response()->json([
-                'alertType' => 'inavalid-attempter',
+                'alertType' => 'invalid-attempter',
                 'message' => 'current session is over. Try to login again'
-            ], 422);
+            ], 403);
         }
 
         
@@ -86,6 +83,9 @@ class EmailVerificationController extends Controller
             // login user
             $token = $this->guard()->login($user);
             $this->guard()->setToken($token);
+            $this->therapistService->updateTherapistDetails($this->guard()->id(),[
+            'logged_in_at' => Carbon::now()
+            ]);
 
             // set to httponly cookie
             $jwtCookie = cookie('jwt', $token, 60);
@@ -102,14 +102,15 @@ class EmailVerificationController extends Controller
 
             // send the verification success message 
             return response()->json([
-                'alertType' => 'success',
+                'alertType' => 'verification-success',
                 'message' => 'Your account is verified successfully',
                 'user' => new TherapistResource($user)
             ], 200)->withCookie($jwtCookie)
                     ->withCookie($otpCookie)
-                    >withCookie($attempterCookie);
+                    ->withCookie($attempterCookie);
         }
         catch(Throwable $exception){
+            return $exception;
             return response()->json([
                 'alertType' => 'internal-server-error',
                 'message' => 'Something went wrong ! Please try again later'
@@ -121,8 +122,19 @@ class EmailVerificationController extends Controller
     // resend verification link
     public function resendLink(Request $request)
     {
+        // get the attempter cookie
+        $attempter = $request->cookie('attempter');
+
+        // return response for invalid attemter
+        if(! $attempter){
+            return response()->json([
+                'alertType' => 'invalid-attempter',
+                'message' => 'current session is over. Try to login again'
+            ], 403);
+        }
+
         // if user not found
-        $user = $this->therapistService->findTherapistBySpecificField('email', $request->email);
+        $user = $this->therapistService->findTherapistBySpecificField('email', Crypt::decrypt($attempter));
         
         if (!$user) {
             return response()->json([
@@ -146,10 +158,10 @@ class EmailVerificationController extends Controller
             
             if($request->cookie('OTP_COOKIE')){
                cookie()->forget('OTP_COOKIE');
-               $otpCookie = cookie('OTP_COOKIE', $token, 60);  // set the token in a cookie 
-            }else{
-                $otpCookie = cookie('OTP_COOKIE', $token, 60);  // set the token in a cookie
             }
+
+            $otpCookie = cookie('OTP_COOKIE', Crypt::encrypt($token), 60);  // set the token in a cookie
+            
             
             $user->sendEmailVerificationMail($token);       // send notification with new token
             

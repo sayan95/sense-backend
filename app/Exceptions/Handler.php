@@ -5,6 +5,7 @@ namespace App\Exceptions;
 use Throwable;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Foundation\Http\Exceptions\MaintenanceModeException;
 
 class Handler extends ExceptionHandler
 {
@@ -56,6 +57,12 @@ class Handler extends ExceptionHandler
                 'alertType' => 'user-unauthenticated',
                 'message' => 'You are unauthenticated.'
             ], 401);
+        }
+        if($exception instanceof MaintenanceModeException && $request->expectsJson()){
+            return response()->json([
+                'alertType' => 'app-in-maintainance',
+                'message' => 'Our application is in maintainance mode. Try after some time.'
+            ], 503);
         }
         return parent::render($request, $exception);
     }
