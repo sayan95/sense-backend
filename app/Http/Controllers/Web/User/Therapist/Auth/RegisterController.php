@@ -46,7 +46,7 @@ class RegisterController extends Controller
         
         // return response
         return response()->json([
-            'alertType' => 'success',
+            'alertType' => 'otp-sent',
             'message' => 'An OTP has been sent to your email. Please check your email'
         ], 200)->withCookie($otpCookie)
             ->withCookie($attempterCookie); // attch cookie with the response

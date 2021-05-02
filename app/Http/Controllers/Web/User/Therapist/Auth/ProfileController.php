@@ -33,7 +33,7 @@ class ProfileController extends Controller
         // add data to record
         $this->therapistService->addTherpistProfile($email, $request->all());
         return response()->json([
-            'alertType' => 'success',
+            'alertType' => 'profile-created',
             'message' => 'Thank you for joining us. We will catch you soon :)'
         ], 201);
     }
@@ -49,7 +49,7 @@ class ProfileController extends Controller
             'language_proficiency' => ['required'],
             'education' => ['required'],
             'therapist_profile' => ['required'],
-            'expertise' => ['required'],
+            'experties' => ['required'],
             'spectrum_specialization' => ['required'],
             'age_group' => ['required']
         ]);

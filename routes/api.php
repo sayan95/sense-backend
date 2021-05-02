@@ -1,6 +1,5 @@
 <?php
 
-use App\Model\User\Therapist\Therapist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -47,7 +46,7 @@ Route::group([
  *  therapist routes group
  */
 Route::group([ 
-    'prefix' => 'therapist',
+    'prefix' => 'therapist/auth-api',
     'namespace' => 'Web\User\Therapist',
     'middleware' => 'guest:therapist'
 ], function(){
@@ -58,7 +57,7 @@ Route::group([
 });  // guest routes
 
 Route::group([
-    'prefix' => 'therapist',
+    'prefix' => 'therapist/auth-api',
     'namespace' => 'Web\User\Therapist',
     'middleware' => 'auth:therapist'
 ], function(){
@@ -72,12 +71,12 @@ Route::group([
  *  Application related configs and support service route group
  */
 Route::group([
-    'prefix' => 'app',
+    'prefix' => 'app/service-api',
     'namespace' => 'Web\App'
 ], function(){
     Route::get('/service/therapist', 'TherapistServiceSupportController@getTherapistServiceData')->name('app.therapist.service');
+    Route::get('/settings/info', 'AppSettingsController@index')->name('app.settings.info');
 });
-
 
 
 // route for testing endpoint connection 

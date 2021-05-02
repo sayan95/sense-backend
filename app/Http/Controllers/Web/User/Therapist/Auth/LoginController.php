@@ -10,6 +10,7 @@ use App\Services\Interfaces\ITherapistService;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use App\Http\Resources\Therapist\TherapistResource;
 use App\Events\User\Therapist\SendOtpForTherapistEvent;
+use Carbon\Carbon;
 
 class LoginController extends Controller
 {
@@ -96,6 +97,11 @@ class LoginController extends Controller
 
         //extract the token's expiary date
         $expiration = $this->guard()->getPayload()->get('exp');
+        
+        // set logged in time
+        $this->therapistService->updateTherapistDetails($this->guard()->id(), [
+            'logged_in_at' => Carbon::now()
+        ]);
 
         // return success message with token
         return response()->json([
