@@ -69,7 +69,7 @@ class EmailVerificationController extends Controller
         }
 
         // check if the user has already verified account
-        if ($user->hasVerifiedEmail()) {
+        if ($user->hasVerifiedEmail() !== 'pending') {
             return response()->json([
                 'alertType' => 'already-verified-account',
                 'message' => 'Your account is already verified'

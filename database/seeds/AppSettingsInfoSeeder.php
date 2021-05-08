@@ -14,6 +14,7 @@ class AppSettingsInfoSeeder extends Seeder
     {
         Settings::create([
             'app_name' => 'sense',
+            'app_logo' => 'sense_logo.png'
         ]);
     }
 }

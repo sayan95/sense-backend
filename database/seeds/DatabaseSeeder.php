@@ -12,7 +12,7 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         //$this->call(AdminSeeder::class);
-        $this->call(AppToTherapistServiceDataSeeder::class);
-        //$this->call(AppSettingsInfoSeeder::class);
+        //$this->call(AppToTherapistServiceDataSeeder::class);
+        $this->call(AppSettingsInfoSeeder::class);
     }
 }

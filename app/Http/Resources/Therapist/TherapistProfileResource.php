@@ -15,7 +15,7 @@ class TherapistProfileResource extends JsonResource
     public function toArray($request)
     {
         return [
-            'first_name' => 'empty'
+            
         ];
     }
 }

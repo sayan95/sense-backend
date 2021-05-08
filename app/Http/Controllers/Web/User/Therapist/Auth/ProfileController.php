@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web\User\Therapist\Auth;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Therapist\TherapistResource;
 use App\Services\Interfaces\ITherapistService;
 use Illuminate\Support\Facades\Validator;
 
@@ -33,6 +34,7 @@ class ProfileController extends Controller
         // add data to record
         $this->therapistService->addTherpistProfile($email, $request->all());
         return response()->json([
+            'user' => new TherapistResource($this->therapistService->findTherapistBySpecificField('email', $email)),
             'alertType' => 'profile-created',
             'message' => 'Thank you for joining us. We will catch you soon :)'
         ], 201);
@@ -53,10 +55,5 @@ class ProfileController extends Controller
             'spectrum_specialization' => ['required'],
             'age_group' => ['required']
         ]);
-    }
-
-    // defined auth guard
-    private function guard(){
-        return auth()->guard('therapist');
     }
 }
