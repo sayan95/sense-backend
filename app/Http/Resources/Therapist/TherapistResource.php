@@ -28,7 +28,7 @@ class TherapistResource extends JsonResource
                 'logged_in_at' => $this->logged_in_at ? $this->logged_in_at->format('jS F Y, g:i a') : null 
             ], 
             'account_status' => [
-                'is_active'=> $this->is_active, 
+                'is_active'=> $this->is_active ? 'verified' : 'pending', 
                 'profile_created' => $this->profile_created
             ]
         ];
