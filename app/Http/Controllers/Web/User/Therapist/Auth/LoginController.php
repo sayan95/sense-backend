@@ -22,7 +22,9 @@ class LoginController extends Controller
         $this->middleware('guest:therapist')->only('login');
     }
 
-    // validate login credentials
+    /**
+     * validate login credentials
+     */
     protected function validateLogin(Request $request)
     {
         $request->validate([
@@ -31,7 +33,9 @@ class LoginController extends Controller
         ]);
     }
     
-    // attempts for login
+    /**
+     * attempts for login
+     */
     protected function attemptLogin(Request $request){
         // login credentials
         $credentials = $request->only('email', 'password');
@@ -51,7 +55,9 @@ class LoginController extends Controller
         return true;
     }
 
-    // send login success response
+    /**
+     *  send login success response
+     */
     protected function sendLoginResponse(Request $request)
     {
         $this->clearLoginAttempts($request);
@@ -62,21 +68,22 @@ class LoginController extends Controller
         // email is not verified
         if(!$has_verified_email){
             // get the auth user
-            $therapist = $this->therapistService->findTherapistById($this->guard()->id());
+            $therapist = $this->therapistService->findTherapistById($this->guard()->id(), []);
+            // generate a 6 digit token
+            $token = rand(100000, 999999);                                  
             
-            $token = rand(100000, 999999);                                  // generate a 6 digit token
-            
-            if($request->cookie('OTP_COOKIE')){                             // Delete any xisting cookie
+            // Delete any xisting cookie
+            if($request->cookie('OTP_COOKIE')){                             
                 cookie()->forget('OTP_COOKIE');
             }
             if($request->cookie('attempter')){
                 cookie()->forget('attempter');
             }
-
-            $otpCookie = cookie('OTP_COOKIE', Crypt::encrypt($token), 60);     // set the token in a cookie
+            // set the token in a cookie
+            $otpCookie = cookie('OTP_COOKIE', Crypt::encrypt($token), 60);     
             $attemptedUserCookie = cookie('attempter', Crypt::encrypt($therapist->email), 60);
-
-            $therapist->sendEmailVerificationMail($token);                    // send the email for otp 
+            // send the email for otp 
+            $therapist->sendEmailVerificationMail($token);                   
             
             // logout user
             $this->guard()->logout();
@@ -110,11 +117,13 @@ class LoginController extends Controller
             'token'=>$token,
             'token_type' => 'bearer',
             'expires_in' => $expiration,
-            'user' => new TherapistResource($this->guard()->user())
+            'user' => new TherapistResource($this->therapistService->findTherapistById($this->guard()->id(), ['profile']))
         ], 200)->withCookie($jwtCookie);
     }
 
-    // sends login failed reponse
+    /**
+     * sends login failed reponse
+     */
     protected function sendFailedLoginResponse(Request $request)
     {
         return response()->json([
@@ -125,7 +134,9 @@ class LoginController extends Controller
         ], 422);
     }
 
-    // returns authentication guard for therapist
+    /**
+     *  returns authentication guard for therapist
+     */
     private function guard(){
         return auth()->guard('therapist');
     } 

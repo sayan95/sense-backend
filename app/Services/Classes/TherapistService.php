@@ -2,8 +2,9 @@
 
 namespace App\Services\Classes;
 
-use App\Repositories\Contracts\TherapistContract;
+use App\Repositories\DAL\Criterias\EagerLoad;
 use App\Services\Interfaces\ITherapistService;
+use App\Repositories\Contracts\TherapistContract;
 
 class TherapistService implements ITherapistService{
     private $therapist;
@@ -14,14 +15,14 @@ class TherapistService implements ITherapistService{
     }
 
     // find a therapist by id
-    public function findTherapistById($id)
+    public function findTherapistById($id, array $relations)
     {
-        return $this->therapist->find($id);    
+        return $this->therapist->withCriterias([new EagerLoad($relations)])->find($id);    
     }
 
     // find a therapist by specifi field
-    public function findTherapistBySpecificField($col, $value){
-        return $this->therapist->findWhereFirst($col, $value);
+    public function findTherapistBySpecificField($col, $value, array $relations){
+        return $this->therapist->withCriterias([new EagerLoad($relations)])->findWhereFirst($col, $value);
     }
 
     // add therapist details to database
@@ -39,5 +40,15 @@ class TherapistService implements ITherapistService{
     public function addTherpistProfile($email, array $data)
     {
         return $this->therapist->createProfile($email, $data);
+    }
+
+    // delet therapist account by id
+    public function deleteTherapistAccountById($id){
+        $this->therapist->delete($id);
+    }
+
+    // 
+    public function deleteTherapistAccountByField($col, $value){
+        $this->therapist->deleteBySpecificField($col, $value);
     }
 }

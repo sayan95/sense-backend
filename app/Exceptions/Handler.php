@@ -7,6 +7,7 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Foundation\Http\Exceptions\MaintenanceModeException;
 
+
 class Handler extends ExceptionHandler
 {
     /**
@@ -37,7 +38,12 @@ class Handler extends ExceptionHandler
      * @throws \Throwable
      */
     public function report(Throwable $exception)
-    {
+    {   
+        // report exceptions to sentry
+        // if (app()->bound('sentry') && $this->shouldReport($exception)) {
+        //     app('sentry')->captureException($exception);
+        // }
+
         parent::report($exception);
     }
 

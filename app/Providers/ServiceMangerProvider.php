@@ -4,8 +4,9 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use App\Services\Classes\{
-    AdminService,
+    CacheService,
     AgeListService,
+    AppSettingsService,
     TherapistService,
     DegreeListService,
     LanguageListService,
@@ -14,8 +15,9 @@ use App\Services\Classes\{
     SpectrumSpecializationListService,
 };
 use App\Services\Interfaces\{
-    IAdminService,
+    ICacheService,
     IAgeListService,
+    IAppSettingsService,
     ITherapistService,
     IDegreeListService,
     ILanguageListService,
@@ -47,7 +49,6 @@ class ServiceMangerProvider extends ServiceProvider
         /**
          *  binding the service interfaces with its concrete implementation
          */
-        $this->app->bind(IAdminService::class, AdminService::class);
         $this->app->bind(ITherapistService::class, TherapistService::class);
         $this->app->bind(IAgeListService::class, AgeListService::class);
         $this->app->bind(IDegreeListService::class, DegreeListService::class);
@@ -55,5 +56,7 @@ class ServiceMangerProvider extends ServiceProvider
         $this->app->bind(ILanguageListService::class, LanguageListService::class);
         $this->app->bind(ISpectrumSpecializationListService::class, SpectrumSpecializationListService::class);
         $this->app->bind(ITherapyProfileListService::class, TherapyProfileListService::class);
+        $this->app->bind(IAppSettingsService::class, AppSettingsService::class);
+        $this->app->bind(ICacheService::class, CacheService::class);
     }
 }

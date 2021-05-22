@@ -21,6 +21,7 @@ class CreateTherapistsTable extends Migration
             $table->boolean('profile_created')->default(false);
             $table->timestamp('email_verified_at')->nullable();
             $table->boolean('is_active')->default(false);
+            $table->timestamp('logged_in_at')->nullable();
             $table->timestamps();
         });
     }

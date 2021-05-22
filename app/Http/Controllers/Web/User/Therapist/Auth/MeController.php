@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Web\User\Therapist\Auth;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\Therapist\TherapistResource;
+use App\Repositories\DAL\Criterisa\EagerLoad;
 use App\Services\Interfaces\ITherapistService;
+use App\Http\Resources\Therapist\TherapistResource;
 
 class MeController extends Controller
 {
@@ -25,7 +26,7 @@ class MeController extends Controller
         return response()->json([
             'alertType' => 'user-authenticated',
             'user' => new TherapistResource(
-                $this->therapistService->findTherapistById($this->guard()->id())
+                $this->therapistService->findTherapistById($this->guard()->id(), ['profile'])
             )
         ], 200);
     }

@@ -35,6 +35,7 @@ class VerifyEmail extends Notification implements ShouldQueue
         return ['mail'];
     }
 
+
     /**
      * Get the mail representation of the notification.
      *
@@ -43,6 +44,7 @@ class VerifyEmail extends Notification implements ShouldQueue
      */
     public function toMail($notifiable)
     {
+        
         $appUrl = config('app.client_url', config('app.url'));  
         $url = URL::temporarySignedRoute(
             'therapist.verify.email', 

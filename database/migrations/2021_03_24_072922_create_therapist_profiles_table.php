@@ -19,12 +19,12 @@ class CreateTherapistProfilesTable extends Migration
             $table->string('lastname');
             $table->string('phone')->unique();
             $table->string('gender');
-            $table->string('language_proficiency');
-            $table->string('education');
-            $table->string('therapist_profile');
-            $table->string('expertise');
-            $table->string('spectrum_specialization');
-            $table->string('age_group');
+            $table->json('education');
+            $table->json('experties');
+            $table->json('age_group');
+            $table->json('therapist_profile');
+            $table->json('language_proficiency');
+            $table->json('spectrum_specialization');
             $table->timestamps();
         });
 

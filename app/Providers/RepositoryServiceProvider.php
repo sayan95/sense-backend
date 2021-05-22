@@ -4,8 +4,8 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use App\Repositories\DAL\{
-    AdminRepository,
     AgeListRepository,
+    AppSettingsRepository,
     TherapistRepository,
     DegreeListRepository,
     LanguageListRepository,
@@ -15,8 +15,8 @@ use App\Repositories\DAL\{
 };
 
 use App\Repositories\Contracts\{
-    AdminContract,
     AgeListContract,
+    AppSettingsContract,
     TherapistContract,
     DegreeListContract,
     LanguageListContract,
@@ -47,7 +47,6 @@ class RepositoryServiceProvider extends ServiceProvider
         /**
          *  binding the contract with its concrete implementation
          */
-        $this->app->bind(AdminContract::class, AdminRepository::class);
         $this->app->bind(TherapistContract::class, TherapistRepository::class);
         $this->app->bind(AgeListContract::class, AgeListRepository::class);
         $this->app->bind(LanguageListContract::class, LanguageListRepository::class);
@@ -55,5 +54,6 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(ExpertiesListContract::class, ExpertiesListRepository::class);
         $this->app->bind(SpectrumSpecializationListContract::class, SpectrumSpecializationListRepository::class);
         $this->app->bind(TherapyProfileListContract::class, TherapyProfileListRepository::class);
+        $this->app->bind(AppSettingsContract::class, AppSettingsRepository::class);
     }
 }

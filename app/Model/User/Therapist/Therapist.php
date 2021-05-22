@@ -2,12 +2,13 @@
 
 namespace App\Model\User\Therapist;
 
+use Throwable;
+use App\Model\BaseModel as Eloquent;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Notifications\Notifiable;
 use App\Model\User\Therapist\TherapistProfile;
-use App\Notifications\User\Therapist\VerifyEmail;
 use Illuminate\Contracts\Auth\Authenticatable;
-use App\Model\BaseModel as Eloquent;
+use App\Notifications\User\Therapist\VerifyEmail;
 use Illuminate\Auth\Authenticatable as AuthenticatableTrait;
 
 class Therapist extends Eloquent implements JWTSubject, Authenticatable 

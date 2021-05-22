@@ -2,14 +2,13 @@
 
 namespace App\Providers;
 
-use App\Events\User\Therapist\SendOtpForTherapistEvent;
-use App\Events\User\Therapist\TherapistRegisterdEvent;
-use App\Listeners\User\Therapist\ProcessOtpListener;
-use App\Listeners\User\Therapist\TherapistAccountActivationListener;
-use Illuminate\Auth\Events\Registered;
-use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
-use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Auth\Events\Registered;
+use App\Events\User\Therapist\TherapistRegisterdEvent;
+use App\Events\User\Therapist\TherapistDeRegisterEvent;
+use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
+use App\Listeners\User\Therapist\TherapistAccountActivationListener;
+use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -23,9 +22,11 @@ class EventServiceProvider extends ServiceProvider
             SendEmailVerificationNotification::class,
         ],
 
+        // therapist registration event
         TherapistRegisterdEvent::class => [
             TherapistAccountActivationListener::class
-        ]
+        ],
+
     ];
 
     /**

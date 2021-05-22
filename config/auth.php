@@ -47,11 +47,6 @@ return [
             'hash' => false,
         ],
 
-        'admin' => [
-            'driver' => 'jwt',
-            'provider' => 'admins',
-        ],
-
         'therapist' => [
             'driver' => 'jwt',
             'provider' => 'therapist'
@@ -79,11 +74,6 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => App\Model\User\User::class,
-        ],
-        
-        'admins' => [
-            'driver' => 'eloquent',
-            'model' => App\Model\Admin\Admin::class,
         ],
 
         'therapist' => [

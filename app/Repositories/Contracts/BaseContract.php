@@ -2,7 +2,9 @@
 
 namespace App\Repositories\Contracts;
 
-interface BaseContract{
+use App\Repositories\Criterias\Criteria;
+
+interface BaseContract extends Criteria{
     public function all();
     public function find($id);
     public function findWhere($col, $val);
@@ -10,4 +12,5 @@ interface BaseContract{
     public function create(array $data);
     public function update($id, array $data);
     public function delete($id);
+    public function deleteBySpecificField($col, $value);
 }

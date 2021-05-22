@@ -6,7 +6,7 @@ use Illuminate\Support\Arr;
 use App\Repositories\Criterias\Criteria;
 use App\Repositories\Contracts\BaseContract;
 
-abstract class BaseRepository implements BaseContract, Criteria{
+abstract class BaseRepository implements BaseContract{
 
     protected $model;
 
@@ -81,9 +81,18 @@ abstract class BaseRepository implements BaseContract, Criteria{
     }
 
     /**
-     *  delete record
+     *  delete record by id
      */
     public function delete($id){
+        $entity = $this->find($id);
+        $entity->delete();
+    }
 
+    /**
+     *  Delete record by secific field
+     */
+    public function deleteBySpecificField($col, $value){
+        $entity = $this->findWhere($col, $value);
+        $entity->delete();
     }
 }

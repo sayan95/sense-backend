@@ -37,7 +37,7 @@ class AppToTherapistServiceDataSeeder extends Seeder
     {
         $age_groups = ['below 12','12-18','18-35','35-55','55+'];
         $language_list = ['English', 'Hindi', 'Telegu', 'Tamil', 'Marathi', 'Bengali', 'Kashmiri', 'Nepali', 'Odiya'];
-        $degree_list = ['Mphil', 'MD', 'Clinical Counseling', 'Diploma', 'MD'];
+        $degree_list = ['Mphil', 'MD', 'Clinical Counseling', 'Diploma'];
         $experties_list = ['Psychotherapy','CBT/REBT','play therapy','art therapy','hypnotherapy','EMDR','Transactional and analysis therapy','Mindfulness','Tarrots'];
         $specialization_list = ['Psychosis','Eating Disorder','Anxiety','Gender/Sexuality','Mood Disorders','Family and Environmental Stress','Trauma(PTSD)','Neurocognitive','Autism','personality disorders','learning disability','Substance Abuse'];
         $therapy_profile_list = ['Psychiatrist','Clinical Psychologist','Child Psychologist','Special Educator','Neuropsychologist','Sex therapist','Family/Marriage Counselor','Addiction therapist','Trauma therapist'];

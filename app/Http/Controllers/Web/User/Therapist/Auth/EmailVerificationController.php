@@ -3,28 +3,39 @@
 namespace App\Http\Controllers\Web\User\Therapist\Auth;
 
 use Throwable;
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-use App\Services\Interfaces\ITherapistService;
-use App\Events\User\Therapist\TherapistRegisterdEvent;
-use App\Http\Resources\Therapist\TherapistResource;
 use Carbon\Carbon;
+use Illuminate\Support\Arr;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Crypt;
+use App\Model\User\Therapist\Therapist;
+use App\Services\Interfaces\ITherapistService;
+use App\Http\Resources\Therapist\TherapistResource;
+use App\Events\User\Therapist\TherapistRegisterdEvent;
+use App\Events\User\Therapist\TherapistDeRegisterEvent;
 
 class EmailVerificationController extends Controller
 {
     private $therapistService;
+    
+    /**
+     *  constructor
+     */
     public function __construct(ITherapistService $therapistService)
     {
         $this->therapistService = $therapistService;
     }
 
-    // verifying account activation request
+    /**
+     * verifying account activation request
+     */
     public function verify(Request $request)
     {
-        
-        $otp_from_client = $request->otp;                      // get the entered otp
-        $otp_from_cookie = $request->Cookie('OTP_COOKIE')      // get the otp from cookie
+        // get the entered otp
+        $otp_from_client = $request->otp;
+        // get the otp from cookie                     
+        $otp_from_cookie = $request->Cookie('OTP_COOKIE')      
                             ?(string)Crypt::decrypt($request->cookie('OTP_COOKIE')) 
                             : '';
 
@@ -34,31 +45,34 @@ class EmailVerificationController extends Controller
         }
         $user_from_cookie = $request->cookie('attempter');
         
+         
         // return response for invalid attemter
-        if(!$user_from_cookie){
+        if(!$user_from_cookie) {
             return response()->json([
-                'alertType' => 'invalid-attempter',
-                'message' => 'current session is over. Try to login again'
+                'alertType' => 'invalid-attempter', 
+                'message' => 'current session is over. Try to login again' 
             ], 403);
         }
-
-        
-        if($otp_from_client !== $otp_from_cookie ){         // send invalid response if otp is not matched
-            
-            if($otp_from_cookie === ''){                   // if cookie removed or invalidated
+         
+         // send invalid response if otp is not matched
+        if($otp_from_client !== $otp_from_cookie ){        
+            // if cookie removed or invalidated
+            if($otp_from_cookie === ''){                   
                 return response()->json([
                     'alertType' => 'otp-timeout',
                     'message' => 'Your current session is over. Click the resend link for a new OTP'
                 ], 422);
             }
-            return response()->json([                       // if otp mismatched
+            // if otp mismatched
+            return response()->json([                       
                 'alertType' => 'otp-mismatch',
                 'message' => 'Invalid OTP entered'
             ], 422);
         }
         
         // find the therapist
-        $user = $this->therapistService->findTherapistBySpecificField('email', Crypt::decrypt($user_from_cookie));
+        $user = $this->therapistService->findTherapistBySpecificField('email', Crypt::decrypt($user_from_cookie), []);
+
 
         // if the user id is invalid
         if ($user == null) {
@@ -69,7 +83,7 @@ class EmailVerificationController extends Controller
         }
 
         // check if the user has already verified account
-        if (!$user->hasVerifiedEmail()) {
+        if ($user->hasVerifiedEmail()) {
             return response()->json([
                 'alertType' => 'already-verified-account',
                 'message' => 'Your account is already verified'
@@ -78,115 +92,81 @@ class EmailVerificationController extends Controller
         
         try{
             // Fire event of registering therapist to sense
-            event(new TherapistRegisterdEvent($user));
+            event(new TherapistRegisterdEvent($user)); //*********************** */
             
             // login user
-            $token = $this->guard()->login($user);
-            $this->guard()->setToken($token);
-            $this->therapistService->updateTherapistDetails($this->guard()->id(),[
-            'logged_in_at' => Carbon::now()
-            ]);
+            $token = $this->attemptUserLogin($user);
 
-            // set to httponly cookie
-            $jwtCookie = cookie('jwt', $token, 60);
+            // send verification success response
+            return $this->getVerificationSuccessResponse($user, $token);
+        }catch(Throwable $exception){
+            // log the exception
+            Log::channel('applicationLog')
+                ->critical('Therapist email verification process failed. #Origin: email-verification-controller. # AffectedModel: Therapist # ErrorMessage:'. $exception->getMessage());
             
+            // remove the added therapist account
+            $this->therapistService->deleteTherapistAccountById($user->id);
 
-            // remove otp cookie
-            $otpCookie = cookie()->forget('OTP_COOKIE');
-
-            // remove attempter cookie
-            $attempterCookie = cookie()->forget('attempter');
-
-            //extract the token's expiary date
-            $expiration = $this->guard()->getPayload()->get('exp');
-
-            // send the verification success message 
+            // return invalid response
             return response()->json([
-                'alertType' => 'verification-success',
-                'message' => 'Your account is verified successfully',
-                'user' => new TherapistResource($user)
-            ], 200)->withCookie($jwtCookie)
-                    ->withCookie($otpCookie)
-                    ->withCookie($attempterCookie);
-        }
-        catch(Throwable $exception){
-            return $exception;
-            return response()->json([
-                'alertType' => 'internal-server-error',
-                'message' => 'Something went wrong ! Please try again later'
+                'alertType' => 'email-verification-failed',
+                'message' => 'Something went wrong ! 
+                                Email verification failed. 
+                                Please try to re register yourself after some times or contact the support team'
             ], 500);
         }
     
     }
 
-    // resend verification link
-    public function resendLink(Request $request)
-    {
-        // get the attempter cookie
-        $attempter = $request->cookie('attempter');
 
-        // return response for invalid attemter
-        if(! $attempter){
-            return response()->json([
-                'alertType' => 'invalid-attempter',
-                'message' => 'current session is over. Try to login again'
-            ], 403);
-        }
+    /**
+     *  attempt user login
+     */
+    private function attemptUserLogin($user){
+        $token = $this->guard()->login($user);                                       // creates an new auth token
+        $this->guard()->setToken($token);                                           // assign the token to the user
+        $this->therapistService->updateTherapistDetails($this->guard()->id(),[      // update login timestamp
+        'logged_in_at' => Carbon::now()
+        ]);
 
-        // if user not found
-        $user = $this->therapistService->findTherapistBySpecificField('email', Crypt::decrypt($attempter));
-        
-        if (!$user) {
-            return response()->json([
-                'alertType' => 'therapist-not-found-error',
-                'message' => "We can't find a user with that email address."
-            ], 422);
-        }
+        return $token;
+    }
 
-        // if account is already verified
-        if ($user->hasVerifiedEmail()) {
-            return response()->json([
-                'alertType' => 'already-verified-account',
-                'meassgae' => 'Your account is already verified'
-            ], 422);
-        }
-
-        // send verification email
-        try {
-            
-            $token = rand(100000, 999999);    // generate a 6 digit token
-            
-            if($request->cookie('OTP_COOKIE')){
-               cookie()->forget('OTP_COOKIE');
-            }
-
-            $otpCookie = cookie('OTP_COOKIE', Crypt::encrypt($token), 60);  // set the token in a cookie
-            
-            
-            $user->sendEmailVerificationMail($token);       // send notification with new token
-            
-            return response()->json([           
-                'alertType' => 'otp-resend',
-                'message' => 'A new OTP has been sent successfully'
-            ], 200)->withCookie($otpCookie);
-
-        } catch (Throwable $th) {
-            return response()->json([
-                'alertType' => 'internal-server-error',
-                'message' => 'Something went wrong ! please try again'
-            ], 422);
-        }
-
-        // send success email
+    /**
+     *  Send verfication success response
+     */
+    private function getVerificationSuccessResponse($user, $token){
+        // set to httponly cookie
+        $jwtCookie = cookie('jwt', $token, 60);
+        // remove otp cookie
+        $otpCookie = cookie()->forget('OTP_COOKIE');
+        // remove attempter cookie
+        $attempterCookie = cookie()->forget('attempter');
+        //extract the token's expiary date
+        $expiration = $this->guard()->getPayload()->get('exp');
+        // send the verification success message 
         return response()->json([
-            'alertType' => 'success',
-            'message' => 'Verification mail has been resent'
-        ], 200);
+            'alertType' => 'verification-success',
+            'message' => 'Your account is verified successfully',
+            'user' => new TherapistResource($user),
+            'sessionTimeOut' => $expiration
+        ], 200)->withCookie($jwtCookie)
+                ->withCookie($otpCookie)
+                ->withCookie($attempterCookie);
+    } 
+
+    /**
+     *  Send verification failure response 
+     */
+    private function getVerificationFailureResponse(){
+        return response()->json([
+            'alertType' => 'internal-server-error',
+            'message' => 'Something went wrong ! Please try again later'
+        ], 500);
     }
 
-    // returns therapist auth guard
-    private function guard()
-    {
-        return auth()->guard('therapist');
-    }
+    /**
+     * returns therapist auth guard
+     */
+    private function guard() { return auth()->guard('therapist'); }
 }

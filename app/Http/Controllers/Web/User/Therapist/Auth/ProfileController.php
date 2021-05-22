@@ -21,11 +21,13 @@ class ProfileController extends Controller
 
     // creates therapist profile
     public function createProfile(Request $request, $email){
+       // return $request->except('experties');
+        //return $request->experties;
         // check for the valid request
         $this->validator($request->all())->validate();
 
         // update username field
-        $therapist = $this->therapistService->findTherapistBySpecificField('email', $email);
+        $therapist = $this->therapistService->findTherapistBySpecificField('email', $email, []);
         $this->therapistService->updateTherapistDetails($therapist->id,[
             'username' => $request->username,
             'profile_created' => true
@@ -34,7 +36,7 @@ class ProfileController extends Controller
         // add data to record
         $this->therapistService->addTherpistProfile($email, $request->all());
         return response()->json([
-            'user' => new TherapistResource($this->therapistService->findTherapistBySpecificField('email', $email)),
+            'user' => new TherapistResource($this->therapistService->findTherapistBySpecificField('email', $email, ['profile'])),
             'alertType' => 'profile-created',
             'message' => 'Thank you for joining us. We will catch you soon :)'
         ], 201);
@@ -46,7 +48,7 @@ class ProfileController extends Controller
             'username' => ['required', 'max:50', 'unique:therapists'],
             'firstname' => ['required', 'max:50'],
             'lastname' => ['required', 'max:50'],
-            'phone' => ['required', 'regex:/^[0-9]+$/', 'max:10', 'min:10'],
+            'phone' => ['required', 'regex:/^[0-9]+$/', 'max:10', 'min:10', 'unique:therapist_profiles'],
             'gender' => ['required'],
             'language_proficiency' => ['required'],
             'education' => ['required'],

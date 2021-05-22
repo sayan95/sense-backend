@@ -15,7 +15,7 @@ class CreateExpertiesListsTable extends Migration
     {
         Schema::create('experties_lists', function (Blueprint $table) {
             $table->id();
-            $table->string('experties')->unique();
+            $table->string('experties')->nullable();
             $table->timestamps();
         });
     }

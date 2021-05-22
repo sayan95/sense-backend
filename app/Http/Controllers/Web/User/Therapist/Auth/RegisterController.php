@@ -32,6 +32,7 @@ class RegisterController extends Controller
             'is_active' => false
         ]);
         
+        
         // generate a 6 digit token
         $token = rand(100000, 999999);
         

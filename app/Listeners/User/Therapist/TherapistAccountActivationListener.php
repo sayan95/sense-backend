@@ -2,6 +2,8 @@
 
 namespace App\Listeners\User\Therapist;
 
+use Exception;
+use Throwable;
 use Carbon\Carbon;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -25,9 +27,13 @@ class TherapistAccountActivationListener
     public function handle($event)
     {
         // set the is_active flag and verification time
-        $this->therapistService->updateTherapistDetails($event->user->id, [
-            'email_verified_at' => Carbon::now(),
-            'is_active' => true
-        ]);
+        try{
+            $this->therapistService->updateTherapistDetails($event->user->id, [
+                'email_verified_at' => Carbon::now(),
+                'is_active' => true
+            ]);
+        }catch(Throwable $e){
+            throw $e;
+        }
     }
 }

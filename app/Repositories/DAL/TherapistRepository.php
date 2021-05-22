@@ -16,4 +16,5 @@ class TherapistRepository extends BaseRepository implements TherapistContract{
         $therapist = $this->findWhereFirst('email', $email);
         return $therapist->profile()->create($data);
     }
+
 }
