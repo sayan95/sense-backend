@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Web\User\Therapist\Auth;
 
+use Throwable;
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -10,7 +12,8 @@ use App\Services\Interfaces\ITherapistService;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use App\Http\Resources\Therapist\TherapistResource;
 use App\Events\User\Therapist\SendOtpForTherapistEvent;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class LoginController extends Controller
 {
@@ -32,6 +35,7 @@ class LoginController extends Controller
             'password' => 'required|string',
         ]);
     }
+
     
     /**
      * attempts for login
@@ -39,20 +43,43 @@ class LoginController extends Controller
     protected function attemptLogin(Request $request){
         // login credentials
         $credentials = $request->only('email', 'password');
+    
         if($request->has('remember_me') && $request->remember_me === true){
             $token = $this->guard()->setTTL(20160)->attempt($credentials);
         }else{
             $token = $this->guard()->attempt($credentials);
-        } 
-        
+        }
+
         if(!$token){
             return false;
         }
-
         // set the user's token
         $this->guard()->setToken($token);
 
         return true;
+    }
+
+     /**
+     *  Login process initiated
+     */
+    public function login(Request $request)
+    {
+        $this->validateLogin($request);
+
+        if (method_exists($this, 'hasTooManyLoginAttempts') &&
+            $this->hasTooManyLoginAttempts($request)) {
+            $this->fireLockoutEvent($request);
+
+            return $this->sendLockoutResponse($request);
+        }
+
+        if ($this->attemptLogin($request)) {
+            return $this->sendLoginResponse($request);
+        }
+      
+        $this->incrementLoginAttempts($request);
+
+        return $this->sendFailedLoginResponse($request);
     }
 
     /**

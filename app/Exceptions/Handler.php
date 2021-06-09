@@ -64,6 +64,7 @@ class Handler extends ExceptionHandler
                 'message' => 'You are unauthenticated.'
             ], 401);
         }
+        
         if($exception instanceof MaintenanceModeException && $request->expectsJson()){
             return response()->json([
                 'alertType' => 'app-in-maintainance',

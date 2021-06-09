@@ -16,6 +16,7 @@ class CreateTherapistsTable extends Migration
         Schema::create('therapists', function (Blueprint $table) {
             $table->id();
             $table->string('username')->unique()->nullable();
+            //$table->bigIncrements('reg_id');
             $table->string('email')->uniqe();
             $table->string('password');
             $table->boolean('profile_created')->default(false);

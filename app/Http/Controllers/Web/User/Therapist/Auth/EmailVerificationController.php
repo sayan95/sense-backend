@@ -126,7 +126,7 @@ class EmailVerificationController extends Controller
         $token = $this->guard()->login($user);                                       // creates an new auth token
         $this->guard()->setToken($token);                                           // assign the token to the user
         $this->therapistService->updateTherapistDetails($this->guard()->id(),[      // update login timestamp
-        'logged_in_at' => Carbon::now()
+            'logged_in_at' => Carbon::now()
         ]);
 
         return $token;
@@ -142,12 +142,13 @@ class EmailVerificationController extends Controller
         $otpCookie = cookie()->forget('OTP_COOKIE');
         // remove attempter cookie
         $attempterCookie = cookie()->forget('attempter');
+
         //extract the token's expiary date
         $expiration = $this->guard()->getPayload()->get('exp');
         // send the verification success message 
         return response()->json([
             'alertType' => 'verification-success',
-            'message' => 'Your account is verified successfully',
+            'message' => 'Your account has been verified successfully.',
             'user' => new TherapistResource($user),
             'sessionTimeOut' => $expiration
         ], 200)->withCookie($jwtCookie)

@@ -28,8 +28,8 @@ class DBConnectionController extends Controller
             
             // return error resposne
             return response()->json([
-            'alertType' => 'internal-error',
-            'message' => 'Something went wrong! please try after sometime.'
+                'alertType' => 'internal-error',
+                'message' => 'Something went wrong! please try after sometime.'
             ], 500);
         }
 

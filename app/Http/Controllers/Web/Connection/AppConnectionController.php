@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web\Connection;
 
+use Throwable;
 use App\Http\Controllers\Controller;
 
 /**

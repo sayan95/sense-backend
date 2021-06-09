@@ -17,7 +17,7 @@ class Therapist extends Eloquent implements JWTSubject, Authenticatable
     use Notifiable;
     
     // fillable properties
-    protected $fillable = ['username','email' , 'password', 'email_verified_at', 'is_active', 'profile_created', 'logged_in_at'];
+    protected $fillable = ['id', 'username','email' , 'password', 'email_verified_at', 'is_active', 'profile_created', 'logged_in_at'];
  
     // date fields
     protected $dates = ['created_at', 'updated_at', 'email_verified_at', 'logged_in_at'];

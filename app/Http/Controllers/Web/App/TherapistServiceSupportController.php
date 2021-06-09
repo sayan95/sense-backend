@@ -48,7 +48,6 @@ class TherapistServiceSupportController extends Controller
 
     // function that returns the table data for therapist profile creation page
     public function getTherapistServiceData(){
-
         // cache the data for 12 hours
         $therapistServiceData = $this->cacheService->rememberCache('therapistServiceData', 60*12, [   
             'ageGroups' => AgeGroupResource::collection($this->ageTableService->getAllAgeGroups()),
@@ -58,7 +57,6 @@ class TherapistServiceSupportController extends Controller
             'specializations' => SpecializationResource::collection($this->specSpecializationTableService->getAllSpecializations()),
             'experties' => ExpertiesResource::collection($this->expertiesTableService->getAllExperties())
         ]);
-        
         // return cached data
         return response()->json($therapistServiceData, 200);
     }

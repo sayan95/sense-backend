@@ -20,7 +20,7 @@ class TherapistResource extends JsonResource
         return [
             'username' => $this->username ? $this->username : 'not set yet',
             'email' => $this->email, 
-            'profile' => $this->whenLoaded('profile'),
+            'profile' => new TherapistProfileResource($this->whenLoaded('profile')),
             'dates' => [
                 'email_verified_at' => $this->email_verified_at,
                 'created_at' => $this->created_at->format('jS F Y, g:i a'),

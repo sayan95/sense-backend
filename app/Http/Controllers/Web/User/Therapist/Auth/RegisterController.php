@@ -39,11 +39,12 @@ class RegisterController extends Controller
         // set the token in a cookie
         $otpCookie = cookie('OTP_COOKIE', Crypt::encrypt($token), 60);
 
-        // set the new user to the cookie
+        // set the new user to the cookie (private)
         $attempterCookie = cookie('attempter', Crypt::encrypt($newUser->email), 60);
         
-        // sending email verification link
-        $newUser->sendEmailVerificationMail($token);
+       // sending email verification link
+       $newUser->sendEmailVerificationMail($token);
+        
         
         // return response
         return response()->json([

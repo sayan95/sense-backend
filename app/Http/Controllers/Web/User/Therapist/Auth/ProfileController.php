@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Therapist\TherapistResource;
 use App\Services\Interfaces\ITherapistService;
 use Illuminate\Support\Facades\Validator;
+use Throwable;
 
 class ProfileController extends Controller
 {
@@ -21,8 +22,7 @@ class ProfileController extends Controller
 
     // creates therapist profile
     public function createProfile(Request $request, $email){
-       // return $request->except('experties');
-        //return $request->experties;
+        
         // check for the valid request
         $this->validator($request->all())->validate();
 
@@ -34,12 +34,19 @@ class ProfileController extends Controller
         ]);
 
         // add data to record
-        $this->therapistService->addTherpistProfile($email, $request->all());
-        return response()->json([
-            'user' => new TherapistResource($this->therapistService->findTherapistBySpecificField('email', $email, ['profile'])),
-            'alertType' => 'profile-created',
-            'message' => 'Thank you for joining us. We will catch you soon :)'
-        ], 201);
+        try{
+            $this->therapistService->addTherpistProfile($email, $request->all());
+            return response()->json([
+                'user' => new TherapistResource($this->therapistService->findTherapistBySpecificField('email', $email, ['profile'])),
+                'alertType' => 'profile-created',
+                'message' => 'Thank you for joining us. We will catch you soon :)'
+            ], 201);
+        }catch(Throwable $e){
+            return response()->json([
+                'alertType' => 'profile-created-fail',
+                'message' => 'Profile creation process failed! Please try after some time'
+            ], 201);
+        }   
     }
 
     // validate requests
